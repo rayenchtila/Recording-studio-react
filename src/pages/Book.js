@@ -41,6 +41,12 @@ export default function Book() {
         error = "Phone number must be exactly 8 digits";
       }
     }
+    // Added specific check for message in the general validator
+    if (name === "message") {
+      if (!value.trim()) {
+        error = "Please tell us a bit about your project";
+      }
+    }
     return error;
   };
 
@@ -56,12 +62,17 @@ export default function Book() {
   const handleSubmit = () => {
     const isGmailValid = gmailRegex.test(form.email);
     const isPhoneValid = /^\d{8}$/.test(form.phone);
-    if (!isGmailValid || !form.name || !form.date || !isPhoneValid) {
+    const isMessageValid = form.message.trim().length > 0;
+    const isDateValid = form.date !== "";
+
+    // Added checks for form.date and form.message here
+    if (!isGmailValid || !form.name || !isDateValid || !isPhoneValid || !isMessageValid) {
       setErrors({
         email: !isGmailValid ? "A Gmail address is required (@gmail.com)" : "",
         name: !form.name ? "Name is required" : "",
-        date: !form.date ? "Please select a weekend date" : "",
+        date: !isDateValid ? "Please select a date" : "",
         phone: !form.phone ? "Phone number is required" : !isPhoneValid ? "Phone number must be exactly 8 digits" : "",
+        message: !isMessageValid ? "Please describe your project" : ""
       });
       return;
     }
@@ -95,7 +106,14 @@ export default function Book() {
       );
   };
 
-  const isInvalid = !form.name || !gmailRegex.test(form.email) || !form.date || !/^\d{8}$/.test(form.phone) || Object.values(errors).some(x => x);
+  // Updated isInvalid to include the message check
+  const isInvalid = 
+    !form.name || 
+    !gmailRegex.test(form.email) || 
+    !form.date || 
+    !form.message.trim() || 
+    !/^\d{8}$/.test(form.phone) || 
+    Object.values(errors).some(x => x);
 
   return (
     <section className="min-h-screen bg-black flex items-center justify-center px-6 py-24">
@@ -129,6 +147,7 @@ export default function Book() {
             </div>
 
             <div className="flex flex-col gap-8">
+              {/* Name Input */}
               <div className="space-y-2">
                 <input
                   type="text"
@@ -142,6 +161,7 @@ export default function Book() {
                 {errors.name && <p className="text-red-500 text-sm font-medium px-4">{errors.name}</p>}
               </div>
 
+              {/* Phone Input */}
               <div className="space-y-2">
                 <div className={`w-full flex items-center bg-white/5 border rounded-3xl px-8 py-6 transition-all duration-300 focus-within:bg-white/10
                   ${errors.phone ? "border-red-500 bg-red-500/5" : "border-white/10 focus-within:border-white/40"}`}>
@@ -160,6 +180,7 @@ export default function Book() {
                 {errors.phone && <p className="text-red-500 text-sm font-medium px-4">{errors.phone}</p>}
               </div>
 
+              {/* Email Input */}
               <div className="space-y-2">
                 <input
                   type="email"
@@ -173,6 +194,7 @@ export default function Book() {
                 {errors.email && <p className="text-red-500 text-sm font-medium px-4">{errors.email}</p>}
               </div>
 
+              {/* Date and Time Section */}
               <div className="space-y-3">
                 <input
                   type="date"
@@ -186,7 +208,9 @@ export default function Book() {
                       setForm((prev) => ({ ...prev, date: e.target.value }));
                       setErrors((prev) => ({ ...prev, date: "" }));
                     } else {
-                      setErrors((prev) => ({ ...prev, date: "Please select Friday, Saturday, or Sunday ONLY !" }));
+                      // Reset the date value if invalid and show error
+                      setForm((prev) => ({ ...prev, date: "" }));
+                      setErrors((prev) => ({ ...prev, date: "Please select Friday, Saturday, or Sunday ONLY!" }));
                     }
                   }}
                   className={`w-full bg-white/5 border rounded-3xl px-8 py-6 text-xl text-white transition-all duration-300 focus:outline-none 
@@ -212,14 +236,19 @@ export default function Book() {
                 <p className="text-white/30 text-sm tracking-wide px-4">Select your preferred time</p>
               </div>
 
-              <textarea
-                name="message"
-                value={form.message}
-                onChange={handleChange}
-                placeholder="Tell us about your project..."
-                rows={5}
-                className="w-full bg-white/5 border border-white/10 rounded-3xl px-8 py-6 text-xl text-white placeholder-white/20 focus:outline-none focus:border-white/40 focus:bg-white/10 transition-all duration-300 resize-none"
-              />
+              {/* Message / Project Info Section */}
+              <div className="space-y-2">
+                <textarea
+                  name="message"
+                  value={form.message}
+                  onChange={handleChange}
+                  placeholder="Tell us about your project..."
+                  rows={5}
+                  className={`w-full bg-white/5 border rounded-3xl px-8 py-6 text-xl text-white placeholder-white/20 focus:outline-none transition-all duration-300 resize-none
+                    ${errors.message ? "border-red-500 bg-red-500/5" : "border-white/10 focus:border-white/40 focus:bg-white/10"}`}
+                />
+                {errors.message && <p className="text-red-500 text-sm font-medium px-4">{errors.message}</p>}
+              </div>
 
               <button
                 onClick={handleSubmit}
